@@ -1,14 +1,35 @@
 <script setup>
+import { onMounted, ref } from 'vue'
 import StatusBadge from '../components/StatusBadge.vue'
-import { useBuecher } from '../api/buecher'
+import { ladeBuecher, loescheBuch } from '../api/buecher'
 
-const { alleBuecher, buchLoeschen } = useBuecher()
+const buecher = ref([])
+const laden = ref(true)
+const fehler = ref('')
 
-function loeschen(buch) {
-  if (window.confirm(`„${buch.titel}“ wirklich löschen?`)) {
-    buchLoeschen(buch.id)
+async function ladenBuecher() {
+  laden.value = true
+  fehler.value = ''
+  try {
+    buecher.value = await ladeBuecher()
+  } catch (error) {
+    fehler.value = error.message || 'Bücher konnten nicht geladen werden.'
+  } finally {
+    laden.value = false
   }
 }
+
+async function loeschen(buch) {
+  if (!window.confirm(`„${buch.titel}“ wirklich löschen?`)) return
+  try {
+    await loescheBuch(buch.id)
+    await ladenBuecher()
+  } catch (error) {
+    fehler.value = error.message || 'Buch konnte nicht gelöscht werden.'
+  }
+}
+
+onMounted(ladenBuecher)
 </script>
 
 <template>
@@ -24,7 +45,10 @@ function loeschen(buch) {
     </header>
 
     <div class="karte">
-      <table>
+      <p v-if="laden" class="leer">Lade Bücher …</p>
+      <p v-if="fehler" class="fehler">{{ fehler }}</p>
+
+      <table v-if="!laden && !fehler">
         <thead>
           <tr>
             <th>ID</th>
@@ -37,7 +61,7 @@ function loeschen(buch) {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="buch in alleBuecher" :key="buch.id">
+          <tr v-for="buch in buecher" :key="buch.id">
             <td>{{ buch.id }}</td>
             <td>
               <RouterLink :to="`/buecher/${buch.id}`">{{ buch.titel }}</RouterLink>
@@ -62,7 +86,9 @@ function loeschen(buch) {
           </tr>
         </tbody>
       </table>
-      <p v-if="alleBuecher.length === 0" class="leer">Keine Bücher vorhanden.</p>
+      <p v-if="!laden && !fehler && buecher.length === 0" class="leer">
+        Keine Bücher vorhanden.
+      </p>
     </div>
   </section>
 </template>
