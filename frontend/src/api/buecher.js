@@ -1,15 +1,18 @@
 /**
- * Mock-Store als Platzhalter für die spätere Datenbindung.
+ * Datenzugriff für das Bücherei-Portal.
  *
- * TODO: Die Funktionen durch HTTP-Calls auf die Flask-API ersetzen:
- *   GET    /api/buecher
- *   GET    /api/buecher/:id
- *   POST   /api/buecher
- *   PUT    /api/buecher/:id
- *   DELETE /api/buecher/:id
- * Der Vite-Proxy leitet /api bereits an http://localhost:5000 weiter.
+ * Es gibt zwei Betriebsarten:
+ * - USE_MOCK = true: lokale Mock-Daten (Standard, bis Sülos API läuft)
+ * - USE_MOCK = false: HTTP-Calls gegen die Flask-API über src/api/client.js
+ *
+ * Die async-Funktionen (ladeBuecher, ladeBuch, ...) sind die neue Schnittstelle.
+ * Die alten useBuecher/useAusleihen-Exports bleiben vorerst für die Views
+ * erhalten und werden entfernt, sobald alle Views umgestellt sind.
  */
 import { computed, reactive } from 'vue'
+import { request } from './client'
+
+export const USE_MOCK = true
 
 const state = reactive({
   buecher: [
@@ -59,6 +62,97 @@ const state = reactive({
   ],
   naechsteId: 4,
 })
+
+function kopie(element) {
+  return element ? { ...element } : null
+}
+
+function suchbegriffPasst(buch, suchbegriff) {
+  if (!suchbegriff) return true
+  const begriff = suchbegriff.toLocaleLowerCase('de')
+  return (
+    buch.titel.toLocaleLowerCase('de').includes(begriff) ||
+    buch.autor.toLocaleLowerCase('de').includes(begriff)
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Neue Schnittstelle: async, mit Mock-Fallback
+// ---------------------------------------------------------------------------
+
+export async function ladeBuecher(params = {}) {
+  if (USE_MOCK) {
+    return state.buecher
+      .filter((buch) => suchbegriffPasst(buch, params.suchbegriff))
+      .filter((buch) => !params.genre || buch.genre === params.genre)
+      .map(kopie)
+  }
+
+  const abfrage = new URLSearchParams()
+  if (params.suchbegriff) abfrage.set('suchbegriff', params.suchbegriff)
+  if (params.genre) abfrage.set('genre', params.genre)
+  const query = abfrage.toString()
+  return request(`/buecher${query ? `?${query}` : ''}`)
+}
+
+export async function ladeBuch(id) {
+  if (USE_MOCK) {
+    return kopie(state.buecher.find((buch) => buch.id === Number(id)))
+  }
+  return request(`/buecher/${id}`)
+}
+
+export async function legeBuchAn(daten) {
+  if (USE_MOCK) {
+    const buch = {
+      id: state.naechsteId++,
+      titel: daten.titel,
+      autor: daten.autor,
+      isbn: daten.isbn ?? '',
+      erscheinungsjahr: daten.erscheinungsjahr ?? null,
+      genre: daten.genre ?? '',
+      verfuegbar: daten.verfuegbar ?? true,
+    }
+    state.buecher.push(buch)
+    return kopie(buch)
+  }
+  return request('/buecher', {
+    method: 'POST',
+    body: JSON.stringify(daten),
+  })
+}
+
+export async function aendereBuch(id, daten) {
+  if (USE_MOCK) {
+    const buch = state.buecher.find((eintrag) => eintrag.id === Number(id))
+    if (!buch) throw new Error('Buch nicht gefunden')
+    Object.assign(buch, daten)
+    return kopie(buch)
+  }
+  return request(`/buecher/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(daten),
+  })
+}
+
+export async function loescheBuch(id) {
+  if (USE_MOCK) {
+    const index = state.buecher.findIndex((eintrag) => eintrag.id === Number(id))
+    if (index === -1) throw new Error('Buch nicht gefunden')
+    state.buecher.splice(index, 1)
+    return null
+  }
+  return request(`/buecher/${id}`, { method: 'DELETE' })
+}
+
+export async function ladeAusleihen() {
+  if (USE_MOCK) return state.ausleihen.map(kopie)
+  return request('/ausleihen')
+}
+
+// ---------------------------------------------------------------------------
+// Alte Schnittstelle – wird in einem späteren Commit entfernt
+// ---------------------------------------------------------------------------
 
 export function useBuecher() {
   const alleBuecher = computed(() => state.buecher)
