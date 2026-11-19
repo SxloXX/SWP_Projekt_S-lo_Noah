@@ -79,7 +79,7 @@ Der Vite-Proxy leitet `/api`-Requests schon an `http://localhost:5000` weiter. F
 - `fix/*` – Bugfixes
 - `docs/*` – reine Dokumentationsänderungen
 
-Details stehen in [CONTRIBUTING.md](CONTRIBUTING.md).
+Details stehen in [CONTRIBUTING.md](CONTRIBUTING.md). Die konkrete Aufteilung auf die beiden Developer (Noah = Frontend/Design, Sülo = Backend/Daten) steht in [docs/ARBEITSTEILUNG.md](docs/ARBEITSTEILUNG.md).
 
 ## Offene Punkte
 
