@@ -1,15 +1,17 @@
 # Agent-Übergabe – Bücherei-Portal
 
-Stand: 2026-11-26
+Stand: 2026-11-26 (Abend)
 
-Dieses Dokument übergibt den kompletten Projektstand an einen neuen Agenten. Bitte zusätzlich `README.md`, `CONTRIBUTING.md` und `docs/ARBEITSTEILUNG.md` lesen.
+Dieses Dokument übergibt den kompletten Projektstand an einen neuen Agenten oder an Sülo. Bitte zusätzlich `README.md`, `CONTRIBUTING.md`, `docs/ARBEITSTEILUNG.md` und – sobald gemergt – `docs/API_VERTRAG.md` lesen.
+
+> **Regel für Agenten:** Nach jedem Arbeitsblock die betroffenen `.md`-Dateien mitziehen (dieses Handoff, `README.md`, `frontend/README.md`, Fortschritt in `docs/ARBEITSTEILUNG.md`, `docs/API_VERTRAG.md` bei API-Annahmen). Feature-Doku gehört in den Feature-Branch, Projekt-Doku auf einen `docs/*`-Branch.
 
 ## 1. Projekt und Ort
 
 - **Lokaler Pfad:** `C:\Users\noahbaumann\SWP_Projekt_S-lo_Noah`
 - **Remote (`origin`):** `https://github.com/SxloXX/SWP_Projekt_S-lo_Noah.git`
 - **Ziel:** Bücherei-Portal. Flask-Webserver liefert Daten, Vue 3 stellt sie dar (Listenansicht, Detailansicht, Anlegen/Ändern/Löschen, Tabellen und Listen).
-- **Datenbindung:** Bewusst noch nicht echt an eine DB angebunden. Backend nutzt In-Memory-Mock (`backend/api/data.py`), Frontend nutzt einen Mock-Store mit Umschalter. Das ist gewollt und kommt später.
+- **Datenbindung:** Noch keine Datenbank. Das Backend liefert In-Memory-Mock-Daten (`backend/api/data.py`). Das Frontend holt sie inzwischen **echt über die Flask-API** (`USE_MOCK = false`, auf den Feature-Branches – siehe 3).
 
 ## 2. Rollen
 
@@ -19,107 +21,111 @@ Dieses Dokument übergibt den kompletten Projektstand an einen neuen Agenten. Bi
 | **Sülo** | Backend & Daten | `backend/**` |
 | **Beide** | Vertrag, Doku, Reviews | `docs/**`, `README.md`, `CONTRIBUTING.md` |
 
-## 3. Branch- und Commit-Stand
+## 3. Branch-Stand
 
-| Branch | Stand | Zweck |
-| --- | --- | --- |
-| `main` | Release-Stand – aktuellen Hash mit `git log` prüfen | enthält Gerüst + Arbeitsteilung + Handoff |
-| `develop` | Integrationsbranch – aktuellen Hash mit `git log` prüfen | enthält alle gemergten Feature- und Docs-Branches |
-| `feature/frontend-api-binding` | `64dac5f` | **Noahs aktueller Arbeitsbranch** – 3 neue Commits, noch nicht gemergt |
-| `feature/backend-flask-api` | `5e9f6fe` | Sülos Flask-API (bereits nach develop gemergt) |
-| `feature/frontend-vue-portal` | `3c8869d` | Ursprüngliches Vue-Gerüst (bereits gemergt) |
-| `docs/arbeitsteilung` | `9b1946f` | Rollenverteilung (bereits gemergt) |
-| `docs/handoff` | – | Dieses Dokument (bereits nach develop und main gemergt) |
+| Branch | Basis | Stand | Inhalt | Gepusht |
+| --- | --- | --- | --- | --- |
+| `main` | – | Release – Hash mit `git log` prüfen | Gerüst, Arbeitsteilung, Handoff | ja |
+| `develop` | – | Integration – Hash mit `git log` prüfen | alles Gemergte | ja |
+| `feature/frontend-api-binding` | `develop` | `4ae578e` | **F1 fertig** | nein (nur bis `64dac5f`) |
+| `feature/frontend-buch-liste` | F1 | `37c7df3` | **F2 fertig** | nein |
+| `feature/frontend-buch-detail` | F1 | `b50ed73` | **F3 fertig** | nein |
+| `docs/api-vertrag` | `develop` | `64dcfa8` | **API-Vertrag (Entwurf)** | nein |
+| `docs/handoff` | `develop` | dieses Dokument | Handoff + Fortschritt | nein |
 
-Alle Branches sind gepusht. `feature/frontend-api-binding` ist **noch nicht** nach `develop` gemergt und liegt deshalb mehrere Docs-Commits hinter `develop` – ein PR sollte konfliktfrei möglich sein. Arbeitsverzeichnis zuletzt sauber.
+- F2 und F3 bauen auf F1 auf. **Merge-Reihenfolge:** F1 → dann F2 und F3 (vorher auf `develop` rebasen). Vertrag und Handoff unabhängig.
+- Geprüft mit `git merge-tree`: F2+F3, `develop`+F3 und `develop`+Vertrag mergen konfliktfrei. F3 setzt seine CSS-Ergänzungen deshalb bewusst in die Mitte von `style.css`, F2 hängt ans Ende an.
+- Noah hat Push und PRs bewusst **noch zurückgestellt** – nicht ungefragt pushen.
 
-## 4. Was Noah in der letzten Runde gemacht hat (~1,3 h)
+## 4. Was heute gemacht wurde
 
-Drei Commits auf `feature/frontend-api-binding`:
+### F1 – Frontend an Flask-API angebunden (`feature/frontend-api-binding`)
 
-1. `bf3ede7` – `feat(frontend): add small fetch client for the Flask API`  
-   Neue Datei `frontend/src/api/client.js`: kleiner `fetch`-Wrapper mit Prefix `/api`, JSON-Parsing und Fehlermeldungen aus dem Backend.
+| Commit | Inhalt |
+| --- | --- |
+| `bf3ede7` | `src/api/client.js`: fetch-Wrapper für `/api` |
+| `276d3d4` | `src/api/buecher.js`: async-Service mit `USE_MOCK`-Umschalter |
+| `64dac5f` | Bücherliste lädt über den Service |
+| `f60084c` | `USE_MOCK = false`; Detail-, Formular- und Ausleihen-View auf async umgestellt (Lade-/Fehlerzustände); alte `useBuecher`/`useAusleihen` entfernt; verständliche Meldung, wenn das Backend nicht läuft |
+| `4ae578e` | README + frontend/README auf F1-Stand |
 
-2. `276d3d4` – `refactor(frontend): add async data service with mock fallback`  
-   `frontend/src/api/buecher.js`: neue async-Funktionen `ladeBuecher`, `ladeBuch`, `legeBuchAn`, `aendereBuch`, `loescheBuch`, `ladeAusleihen`. Umschalter `USE_MOCK = true`. Die **alten** Exports `useBuecher` / `useAusleihen` wurden absichtlich noch gelassen, damit die restlichen Views weiterlaufen.
+### F2 – Listenansicht (`feature/frontend-buch-liste`)
 
-3. `64dac5f` – `feat(frontend): load book list through async service`  
-   `frontend/src/views/BuecherListeView.vue`: lädt über den Service, mit `laden`- und `fehler`-State; Löschen geht ebenfalls über den async Service.
+| Commit | Inhalt |
+| --- | --- |
+| `6e3fab8` | `filtereBuecher()` filtert auch API-Antworten (Backend ignoriert Filter bis B4); `ladeGenres()` |
+| `08bfad8` | Suchfeld (300 ms Debounce), Genre-Dropdown, „Filter zurücksetzen“, Leerzustand |
+| `6a72f43` | Sortierbare Spalten (ID, Titel, Autor:in, Genre, Jahr), `aria-sort` |
+| `c080843` | Pagination, 10 pro Seite, Seitenbereich-Anzeige |
+| `37c7df3` | Doku: URL-Parameter in frontend/README |
 
-**Wichtig:** Ein halbfertiger Umbau von `BuchDetailView.vue` wurde bewusst **verworfen** (mit `git restore`). Die Datei ist wieder im Ursprungszustand. Es gibt keine uncommitteten Änderungen.
+Alle Zustände stehen in der URL: `?suchbegriff=&genre=&sortierung=&richtung=ab&seite=`.
+
+### F3 – Detailansicht (`feature/frontend-buch-detail`)
+
+| Commit | Inhalt |
+| --- | --- |
+| `89c0a05` | Löschen-Button mit Bestätigung auf der Detailseite |
+| `48df946` | Ausleihen-Historie als Tabelle, Status-Badges Aktiv / Überfällig / Zurückgegeben, Datum `TT.MM.JJJJ`; Helfer in `src/utils/ausleihe.js` |
+| `b50ed73` | Doku in frontend/README |
+
+### Phase 0 – API-Vertrag (`docs/api-vertrag`)
+
+`docs/API_VERTRAG.md`: Ressourcen, Endpunkte mit Statuscodes (✅ vorhanden / 🆕 mit Paket), Listenantwort `{ ergebnisse, gesamt, seite, pro_seite }`, Fehlerformat `{ fehler, felder }`, **4 offene Fragen an Sülo**. Wartet auf Sülos Review. `docs/DATENMODELL.md` (Sülos Teil von Phase 0) fehlt noch.
 
 ## 5. Entscheidungen und Fallen
 
-- `USE_MOCK` steht in `frontend/src/api/buecher.js` auf `true`. Erst auf `false` setzen, wenn Sülos API läuft.
-- Der Vite-Proxy leitet `/api` bereits an `http://localhost:5000` weiter (`frontend/vite.config.js`).
-- Alte Mock-Exports erst entfernen, wenn **alle** Views auf die async-Funktionen umgestellt sind – sonst bricht der Build.
-- Optisch hat sich noch nichts geändert: die Mock-Daten sind identisch mit den alten Daten. Sichtbarer Fortschritt kommt mit Suche/Filter und Design.
-- **Python-Befehl:** `python` ist auf diesem Rechner nicht verfügbar. Stattdessen `py` benutzen (Python 3.14).
-- Node/npm sind verfügbar (Node 24). `npm install` wurde schon ausgeführt, `package-lock.json` ist committet.
-- Der zuletzt gestartete Dev-Server wurde beendet („cancelled because the server restarted“). Neu starten mit `npm run dev` im Ordner `frontend`.
-- GitHub CLI (`gh`) ist **nicht** installiert. Branch-Schutz konnte deshalb nicht per API geprüft oder gesetzt werden.
+- **`USE_MOCK = false`** ist der Standard ab F1. Ohne laufendes Backend zeigen alle Seiten „Serverfehler … Läuft das Backend?“ → Backend starten oder kurz `USE_MOCK = true` setzen.
+- **Filter/Pagination laufen bis B4 im Frontend.** Die Parameter werden schon ans Backend geschickt; nach B4 die Fallbacks in `buecher.js` und `BuecherListeView.vue` entfernen und auf die Listenantwort umstellen.
+- **Bekannter Daten-Bug (Backend):** In `backend/api/data.py` ist „Der Zauberberg“ `verfuegbar: true`, obwohl Ausleihe #2 aktiv ist. Vorschlag im Vertrag: `verfuegbar` berechnen. Noch nicht an Sülo gemeldet.
+- **`python`** gibt es auf diesem Rechner nicht → **`py`** (Python 3.14). `backend/.venv` ist angelegt (in `.gitignore`).
+- **`.claude/launch.json`** liegt untracked im Repo (Startbefehle für die Preview) – nicht committen; ggf. `.claude/` in `.gitignore` aufnehmen.
+- **`gh`** ist nicht installiert → PRs über die GitHub-Weboberfläche.
+- Zeilenenden: Git meldet LF→CRLF-Warnungen, harmlos.
 
 ## 6. Offene Aufgaben – Noah (Frontend)
 
-| Aufgabe | Datei | ca. Aufwand |
+| Aufgabe | Abhängig von | ca. Aufwand |
 | --- | --- | --- |
-| Detailansicht auf `ladeBuch` / `ladeAusleihen` umstellen | `src/views/BuchDetailView.vue` | 45 min |
-| Formulare auf `legeBuchAn` / `aendereBuch` umstellen | `src/views/BuchFormView.vue` | 45 min |
-| Ausleihen-Ansicht auf `ladeAusleihen` / `ladeBuecher` umstellen | `src/views/AusleihenView.vue` | 30 min |
-| Alte Exports `useBuecher` / `useAusleihen` entfernen | `src/api/buecher.js` | 15 min |
-| Suche, Genre-Filter, Sortierung, Pagination | `src/views/BuecherListeView.vue` | 2–3 h |
-| Design/UX, Responsive, Barrierefreiheit | `src/style.css` | 2–4 h |
-| Ausleihen-UI (hängt von Sülos B3 ab) | `src/views/AusleihenView.vue` | 3 h |
-| Reviews und Integration | – | laufend |
-
-Details stehen in `docs/ARBEITSTEILUNG.md` (Pakete F1–F6).
+| F1, Vertrag pushen + PRs; danach F2, F3 | Noahs OK | 15 min |
+| Sülo: Vertrag reviewen lassen, Zauberberg-Bug melden | – | 5 min |
+| **F4 Formulare:** Validierung pro Feld (ISBN, Jahr), Backend-`felder`-Fehler am Feld anzeigen | Vertrag (Fehlerformat) | 45–60 min |
+| **F5 Ausleihen-UI:** ausleihen, zurückgeben, verlängern | Sülos B3 | 3 h |
+| **F6 Design/UX:** Tabelle responsive (läuft bei schmalem Fenster über), Barrierefreiheit | – | 2–4 h |
+| Nach B4: Listenantwort statt Frontend-Filter | Sülos B4 | 30 min |
 
 ## 7. Offene Aufgaben – Sülo (Backend)
 
-Pakete B1–B6 aus `docs/ARBEITSTEILUNG.md`: Datenmodell/SQLAlchemy, Data Binding, Ausleihen-API, Suche/Validierung, Tests, optional Auth.
+- Phase 0: `docs/DATENMODELL.md`, Review von `docs/API_VERTRAG.md` (offene Fragen in Abschnitt 6 dort)
+- B1–B6 aus `docs/ARBEITSTEILUNG.md` – noch keiner begonnen
 
 ## 8. Workflow und Reviews
 
-- Kein direkter Commit auf `main` oder `develop`.
-- Neue Branches immer von `develop` abzweigen.
-- PR geht nach `develop`; der **andere** Dev reviewed (1 Approval genügt).
+- Kein direkter Commit auf `main` oder `develop`; Branches von `develop` (Ausnahme: F2/F3 von F1, weil abhängig).
+- PR nach `develop`, der **andere** Dev reviewed (1 Approval).
 - `main` nur per Release-Merge aus `develop`.
-- Aktuell ist **kein** GitHub-Branch-Schutz technisch eingerichtet – die Regel steht nur in `CONTRIBUTING.md`.
-- Es kann jetzt schon ein **Draft-PR** `feature/frontend-api-binding` → `develop` geöffnet werden. Gemergt wird erst nach Review und abgeschlossenem F1.
-- Branch-Schutz falls gewünscht: GitHub → Settings → Branches → Ruleset für `main` und `develop` mit „Require a pull request before merging“ und „Require approvals: 1“. „Require status checks“ erst mit CI aktivieren.
+- Kein GitHub-Branch-Schutz eingerichtet – Regel steht nur in `CONTRIBUTING.md`.
 
 ## 9. Nützliche Befehle
 
 ```bash
-# Frontend starten
-cd C:\Users\noahbaumann\SWP_Projekt_S-lo_Noah\frontend
-npm run dev                 # http://localhost:5173
-
-# Frontend bauen
-npm --prefix frontend run build
-
 # Backend starten
 cd C:\Users\noahbaumann\SWP_Projekt_S-lo_Noah\backend
-py -m pip install -r requirements.txt
-py app.py                   # http://localhost:5000
+.venv\Scripts\python.exe app.py      # http://localhost:5000
 
-# Backend-Syntax prüfen
+# Frontend starten
+cd C:\Users\noahbaumann\SWP_Projekt_S-lo_Noah\frontend
+npm run dev                          # http://localhost:5173
+
+# Prüfen
+npm --prefix frontend run build
 py -m compileall -q backend
-
-# Git-Stand
-git status --short --branch
 git log --oneline --graph --all --decorate
+git merge-tree --write-tree <branch-a> <branch-b>   # Konflikt-Check ohne Merge
 ```
 
-## 10. Letzte Verifikation
+## 10. Letzte Verifikation (2026-11-26)
 
-- `npm --prefix frontend run build`: grün
-- `py -m compileall -q backend`: grün
-- Browser unter `http://127.0.0.1:5173/buecher`: 3 Bücher sichtbar, keine Konsolenfehler
-
-## 11. Bewusst noch nicht erledigt
-
-- `docs/VUE_CHEATSHEET.md` wurde angeboten, aber **nicht** erstellt.
-- GitHub-Actions-CI nicht eingerichtet.
-- Branch-Schutz nicht eingerichtet.
-- Kein Merge von `feature/frontend-api-binding` nach `develop`.
+- `npm run build` grün auf F1, F2 und F3
+- Im Browser gegen das laufende Flask-Backend getestet: Liste, Suche, Genre-Filter, Sortierung, Pagination (mit 12 Testbüchern), Detail mit Ausleihen-Status, Anlegen, Ändern, Löschen (Liste und Detail), unbekannte ID, Fehlerzustand bei gestopptem Backend
+- Testdaten wieder entfernt (Backend neu gestartet)

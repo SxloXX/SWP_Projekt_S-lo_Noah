@@ -71,6 +71,22 @@ Als Startpunkt dient der vorhandene Branch `feature/backend-flask-api`; neue Pak
 | 5 | F5 Ausleihen-UI + F6 Design | B4 Suche/Validierung | ✅ Features komplett |
 | 6 | Build/Checks | B5 Tests | ✅ Release auf `main` |
 
+## Fortschritt
+
+Stand: 2026-11-26 · Details und Commits in `docs/HANDOFF.md`
+
+| Paket | Wer | Status | Branch |
+| --- | --- | --- | --- |
+| Phase 0 API-Vertrag | Noah | 🟡 Entwurf, Review durch Sülo offen | `docs/api-vertrag` |
+| Phase 0 Datenmodell | Sülo | ⚪ offen | – |
+| F1 API-Client | Noah | 🟢 fertig, PR offen | `feature/frontend-api-binding` |
+| F2 Listenansicht | Noah | 🟢 fertig (Filter/Pagination bis B4 im Frontend), PR offen | `feature/frontend-buch-liste` |
+| F3 Detailansicht | Noah | 🟢 fertig, PR offen | `feature/frontend-buch-detail` |
+| F4 Formulare | Noah | ⚪ offen | – |
+| F5 Ausleihen-UI | Noah | ⚪ wartet auf B3 | – |
+| F6 Design/UX | Noah | ⚪ offen | – |
+| B1–B6 | Sülo | ⚪ offen | – |
+
 ## Gemeinsame Regeln
 
 - Alle neuen Branches von `develop` abzweigen, per PR nach `develop` mergen.
