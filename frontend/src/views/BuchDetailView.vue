@@ -1,7 +1,8 @@
 <script setup>
 import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import StatusBadge from '../components/StatusBadge.vue'
-import { ladeAusleihen, ladeBuch } from '../api/buecher'
+import { ladeAusleihen, ladeBuch, loescheBuch } from '../api/buecher'
 
 const props = defineProps({
   id: {
@@ -10,10 +11,28 @@ const props = defineProps({
   },
 })
 
+const router = useRouter()
+
 const buch = ref(null)
 const ausleihen = ref([])
 const laden = ref(true)
 const fehler = ref('')
+const aktionsFehler = ref('')
+const loescht = ref(false)
+
+async function loeschen() {
+  if (!window.confirm(`„${buch.value.titel}“ wirklich löschen?`)) return
+  loescht.value = true
+  aktionsFehler.value = ''
+  try {
+    await loescheBuch(buch.value.id)
+    router.push('/buecher')
+  } catch (error) {
+    aktionsFehler.value = error.message || 'Buch konnte nicht gelöscht werden.'
+  } finally {
+    loescht.value = false
+  }
+}
 
 async function ladenBuch() {
   laden.value = true
@@ -50,13 +69,25 @@ watch(() => props.id, ladenBuch, { immediate: true })
         <h1>{{ buch.titel }}</h1>
         <p>von {{ buch.autor }}</p>
       </div>
-      <RouterLink
-        class="button button--primary"
-        :to="`/buecher/${buch.id}/bearbeiten`"
-      >
-        Buch ändern
-      </RouterLink>
+      <div class="aktionen">
+        <RouterLink
+          class="button button--primary"
+          :to="`/buecher/${buch.id}/bearbeiten`"
+        >
+          Buch ändern
+        </RouterLink>
+        <button
+          type="button"
+          class="button button--gefahr"
+          :disabled="loescht"
+          @click="loeschen"
+        >
+          {{ loescht ? 'Löscht …' : 'Löschen' }}
+        </button>
+      </div>
     </header>
+
+    <p v-if="aktionsFehler" class="fehler fehler--abstand">{{ aktionsFehler }}</p>
 
     <div class="karte">
       <dl class="detailfelder">
