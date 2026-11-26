@@ -183,6 +183,21 @@ a {
   color: #991b1b;
 }
 
+.status--aktiv {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status--ueberfaellig {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status--zurueckgegeben {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
 .detailfelder {
   display: grid;
   grid-template-columns: 180px 1fr;
