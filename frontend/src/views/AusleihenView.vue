@@ -1,8 +1,34 @@
 <script setup>
-import { useAusleihen, useBuecher } from '../api/buecher'
+import { computed, onMounted, ref } from 'vue'
+import { ladeAusleihen, ladeBuecher } from '../api/buecher'
 
-const { alleAusleihen } = useAusleihen()
-const { buchNachId } = useBuecher()
+const ausleihen = ref([])
+const buecher = ref([])
+const laden = ref(true)
+const fehler = ref('')
+
+const buchNachId = computed(
+  () => new Map(buecher.value.map((buch) => [buch.id, buch])),
+)
+
+async function ladenAusleihen() {
+  laden.value = true
+  fehler.value = ''
+  try {
+    const [geladeneAusleihen, geladeneBuecher] = await Promise.all([
+      ladeAusleihen(),
+      ladeBuecher(),
+    ])
+    ausleihen.value = geladeneAusleihen
+    buecher.value = geladeneBuecher
+  } catch (error) {
+    fehler.value = error.message || 'Ausleihen konnten nicht geladen werden.'
+  } finally {
+    laden.value = false
+  }
+}
+
+onMounted(ladenAusleihen)
 </script>
 
 <template>
@@ -15,14 +41,17 @@ const { buchNachId } = useBuecher()
     </header>
 
     <div class="karte">
-      <ul class="liste">
-        <li v-for="ausleihe in alleAusleihen" :key="ausleihe.id">
+      <p v-if="laden" class="leer">Lade Ausleihen …</p>
+      <p v-if="fehler" class="fehler">{{ fehler }}</p>
+
+      <ul v-if="!laden && !fehler && ausleihen.length" class="liste">
+        <li v-for="ausleihe in ausleihen" :key="ausleihe.id">
           <strong>
             <RouterLink
-              v-if="buchNachId(ausleihe.buch_id)"
+              v-if="buchNachId.get(ausleihe.buch_id)"
               :to="`/buecher/${ausleihe.buch_id}`"
             >
-              {{ buchNachId(ausleihe.buch_id).titel }}
+              {{ buchNachId.get(ausleihe.buch_id).titel }}
             </RouterLink>
             <template v-else>Buch #{{ ausleihe.buch_id }}</template>
           </strong>
@@ -30,7 +59,7 @@ const { buchNachId } = useBuecher()
           · {{ ausleihe.ausgeliehen_am }} → {{ ausleihe.rueckgabe_am }}
         </li>
       </ul>
-      <p v-if="alleAusleihen.length === 0" class="leer">
+      <p v-if="!laden && !fehler && ausleihen.length === 0" class="leer">
         Keine Ausleihen vorhanden.
       </p>
     </div>

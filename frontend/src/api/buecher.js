@@ -2,17 +2,16 @@
  * Datenzugriff für das Bücherei-Portal.
  *
  * Es gibt zwei Betriebsarten:
- * - USE_MOCK = true: lokale Mock-Daten (Standard, bis Sülos API läuft)
+ * - USE_MOCK = true: lokale Mock-Daten (zum Arbeiten ohne laufendes Backend)
  * - USE_MOCK = false: HTTP-Calls gegen die Flask-API über src/api/client.js
  *
- * Die async-Funktionen (ladeBuecher, ladeBuch, ...) sind die neue Schnittstelle.
- * Die alten useBuecher/useAusleihen-Exports bleiben vorerst für die Views
- * erhalten und werden entfernt, sobald alle Views umgestellt sind.
+ * Alle Views greifen nur über die async-Funktionen (ladeBuecher, ladeBuch, ...)
+ * auf Daten zu und funktionieren deshalb in beiden Betriebsarten.
  */
-import { computed, reactive } from 'vue'
+import { reactive } from 'vue'
 import { request } from './client'
 
-export const USE_MOCK = true
+export const USE_MOCK = false
 
 const state = reactive({
   buecher: [
@@ -148,54 +147,4 @@ export async function loescheBuch(id) {
 export async function ladeAusleihen() {
   if (USE_MOCK) return state.ausleihen.map(kopie)
   return request('/ausleihen')
-}
-
-// ---------------------------------------------------------------------------
-// Alte Schnittstelle – wird in einem späteren Commit entfernt
-// ---------------------------------------------------------------------------
-
-export function useBuecher() {
-  const alleBuecher = computed(() => state.buecher)
-
-  function buchNachId(id) {
-    return state.buecher.find((buch) => buch.id === Number(id))
-  }
-
-  function buchAnlegen(daten) {
-    const buch = {
-      id: state.naechsteId++,
-      titel: daten.titel,
-      autor: daten.autor,
-      isbn: daten.isbn ?? '',
-      erscheinungsjahr: daten.erscheinungsjahr ?? null,
-      genre: daten.genre ?? '',
-      verfuegbar: daten.verfuegbar ?? true,
-    }
-    state.buecher.push(buch)
-    return buch
-  }
-
-  function buchAendern(id, daten) {
-    const buch = buchNachId(id)
-    if (!buch) return null
-    Object.assign(buch, daten)
-    return buch
-  }
-
-  function buchLoeschen(id) {
-    const index = state.buecher.findIndex((buch) => buch.id === Number(id))
-    if (index !== -1) state.buecher.splice(index, 1)
-  }
-
-  return { alleBuecher, buchNachId, buchAnlegen, buchAendern, buchLoeschen }
-}
-
-export function useAusleihen() {
-  const alleAusleihen = computed(() => state.ausleihen)
-
-  function ausleihenFuerBuch(buchId) {
-    return state.ausleihen.filter((ausleihe) => ausleihe.buch_id === Number(buchId))
-  }
-
-  return { alleAusleihen, ausleihenFuerBuch }
 }

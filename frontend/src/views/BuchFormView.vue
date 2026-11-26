@@ -1,7 +1,7 @@
 <script setup>
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useBuecher } from '../api/buecher'
+import { aendereBuch, ladeBuch, legeBuchAn } from '../api/buecher'
 
 const props = defineProps({
   id: {
@@ -11,9 +11,10 @@ const props = defineProps({
 })
 
 const router = useRouter()
-const { buchNachId, buchAnlegen, buchAendern } = useBuecher()
 
 const istBearbeitung = Boolean(props.id)
+const laden = ref(istBearbeitung)
+const speichert = ref(false)
 const fehler = ref('')
 
 const formular = reactive({
@@ -25,9 +26,13 @@ const formular = reactive({
   verfuegbar: true,
 })
 
-if (istBearbeitung) {
-  const buch = buchNachId(props.id)
-  if (buch) {
+async function ladenBuch() {
+  try {
+    const buch = await ladeBuch(props.id)
+    if (!buch) {
+      fehler.value = 'Buch nicht gefunden.'
+      return
+    }
     const { titel, autor, isbn, erscheinungsjahr, genre, verfuegbar } = buch
     Object.assign(formular, {
       titel,
@@ -37,12 +42,14 @@ if (istBearbeitung) {
       genre,
       verfuegbar,
     })
-  } else {
-    fehler.value = 'Buch nicht gefunden.'
+  } catch (error) {
+    fehler.value = error.message || 'Buch konnte nicht geladen werden.'
+  } finally {
+    laden.value = false
   }
 }
 
-function speichern() {
+async function speichern() {
   if (!formular.titel.trim() || !formular.autor.trim()) {
     fehler.value = 'Titel und Autor:in sind Pflichtfelder.'
     return
@@ -55,12 +62,23 @@ function speichern() {
     erscheinungsjahr: formular.erscheinungsjahr || null,
   }
 
-  const gespeichert = istBearbeitung
-    ? buchAendern(props.id, daten)
-    : buchAnlegen(daten)
-
-  if (gespeichert) router.push(`/buecher/${gespeichert.id}`)
+  speichert.value = true
+  fehler.value = ''
+  try {
+    const gespeichert = istBearbeitung
+      ? await aendereBuch(props.id, daten)
+      : await legeBuchAn(daten)
+    router.push(`/buecher/${gespeichert.id}`)
+  } catch (error) {
+    fehler.value = error.message || 'Buch konnte nicht gespeichert werden.'
+  } finally {
+    speichert.value = false
+  }
 }
+
+onMounted(() => {
+  if (istBearbeitung) ladenBuch()
+})
 </script>
 
 <template>
@@ -79,7 +97,11 @@ function speichern() {
       </div>
     </header>
 
-    <form class="karte formular" @submit.prevent="speichern">
+    <div v-if="laden" class="karte">
+      <p class="leer">Lade Buch …</p>
+    </div>
+
+    <form v-else class="karte formular" @submit.prevent="speichern">
       <p v-if="fehler" class="fehler">{{ fehler }}</p>
 
       <label>
@@ -108,8 +130,14 @@ function speichern() {
       </label>
 
       <div class="formular-aktionen">
-        <button type="submit" class="button button--primary">
-          {{ istBearbeitung ? 'Speichern' : 'Anlegen' }}
+        <button type="submit" class="button button--primary" :disabled="speichert">
+          {{
+            speichert
+              ? 'Speichert …'
+              : istBearbeitung
+                ? 'Speichern'
+                : 'Anlegen'
+          }}
         </button>
         <RouterLink to="/buecher" class="button">Abbrechen</RouterLink>
       </div>
