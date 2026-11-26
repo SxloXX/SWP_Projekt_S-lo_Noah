@@ -49,6 +49,31 @@ const sortierteBuecher = computed(() => {
   return [...buecher.value].sort((a, b) => vergleiche(a[feld], b[feld], faktor))
 })
 
+// Pagination vorerst im Frontend. Sobald das Backend (B4) das Format
+// { ergebnisse, gesamt, seite } liefert, kommt die Seite von dort.
+const PRO_SEITE = 10
+const seitenAnzahl = computed(() =>
+  Math.max(1, Math.ceil(sortierteBuecher.value.length / PRO_SEITE)),
+)
+const seite = computed(() => {
+  const wert = Number.parseInt(route.query.seite, 10)
+  if (!Number.isFinite(wert) || wert < 1) return 1
+  return Math.min(wert, seitenAnzahl.value)
+})
+const sichtbareBuecher = computed(() => {
+  const start = (seite.value - 1) * PRO_SEITE
+  return sortierteBuecher.value.slice(start, start + PRO_SEITE)
+})
+const bereich = computed(() => {
+  const gesamt = sortierteBuecher.value.length
+  const von = gesamt ? (seite.value - 1) * PRO_SEITE + 1 : 0
+  return { von, bis: Math.min(seite.value * PRO_SEITE, gesamt), gesamt }
+})
+
+function geheZuSeite(nummer) {
+  setzeQuery({ seite: nummer > 1 ? String(nummer) : '' })
+}
+
 function sortiereNach(feld) {
   const neueRichtung =
     sortierung.value === feld && richtung.value === 'auf' ? 'ab' : 'auf'
@@ -64,7 +89,8 @@ function ariaSort(feld) {
 }
 
 function setzeQuery(aenderungen) {
-  const query = { ...route.query, ...aenderungen }
+  // Neue Suche, neuer Filter oder neue Sortierung starten wieder auf Seite 1.
+  const query = { ...route.query, seite: '', ...aenderungen }
   for (const [schluessel, wert] of Object.entries(query)) {
     if (wert === '' || wert === null || wert === undefined) delete query[schluessel]
   }
@@ -208,7 +234,7 @@ onMounted(() => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="buch in sortierteBuecher" :key="buch.id">
+          <tr v-for="buch in sichtbareBuecher" :key="buch.id">
             <td>{{ buch.id }}</td>
             <td>
               <RouterLink :to="`/buecher/${buch.id}`">{{ buch.titel }}</RouterLink>
@@ -233,6 +259,35 @@ onMounted(() => {
           </tr>
         </tbody>
       </table>
+
+      <nav
+        v-if="!laden && !fehler && buecher.length"
+        class="seitennavigation"
+        aria-label="Seiten der Bücherliste"
+      >
+        <span class="leer">
+          {{ bereich.von }}–{{ bereich.bis }} von {{ bereich.gesamt }} Büchern
+        </span>
+        <div v-if="seitenAnzahl > 1" class="seitennavigation__knoepfe">
+          <button
+            type="button"
+            class="button"
+            :disabled="seite === 1"
+            @click="geheZuSeite(seite - 1)"
+          >
+            ← Zurück
+          </button>
+          <span>Seite {{ seite }} von {{ seitenAnzahl }}</span>
+          <button
+            type="button"
+            class="button"
+            :disabled="seite === seitenAnzahl"
+            @click="geheZuSeite(seite + 1)"
+          >
+            Weiter →
+          </button>
+        </div>
+      </nav>
       <p v-if="!laden && !fehler && buecher.length === 0" class="leer">
         {{
           filterAktiv
