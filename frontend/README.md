@@ -23,10 +23,26 @@ Danach: `http://localhost:5173`. Für echte Daten zusätzlich das Backend auf Po
 
 ## Datenbindung
 
-Aktuell kommt der Inhalt aus `src/api/buecher.js` (Mock-Store). Für die spätere Anbindung an die Flask-API diese Funktionen durch `fetch('/api/...')` ersetzen. Der Vite-Proxy in `vite.config.js` leitet `/api` schon an `http://localhost:5000` weiter.
+Alle Views holen ihre Daten ausschließlich über die async-Funktionen in `src/api/buecher.js`:
+
+| Funktion | Request |
+| --- | --- |
+| `ladeBuecher(params)` | `GET /api/buecher` |
+| `ladeBuch(id)` | `GET /api/buecher/<id>` |
+| `legeBuchAn(daten)` | `POST /api/buecher` |
+| `aendereBuch(id, daten)` | `PUT /api/buecher/<id>` |
+| `loescheBuch(id)` | `DELETE /api/buecher/<id>` |
+| `ladeAusleihen()` | `GET /api/ausleihen` |
+
+- `USE_MOCK = false` (Standard): Requests gehen über `src/api/client.js` an Flask. Der Vite-Proxy in `vite.config.js` leitet `/api` an `http://localhost:5000` weiter.
+- `USE_MOCK = true`: lokale Mock-Daten, zum Arbeiten ohne Backend.
+- Jede View zeigt einen Lade- und einen Fehlerzustand. Ist das Backend nicht erreichbar, erscheint „Serverfehler … Läuft das Backend?“.
 
 ## Offen
 
-- [ ] Mock-Store durch HTTP-Calls ersetzen
-- [ ] Lade- und Fehlerzustände in den Views anzeigen
-- [ ] Ausleihen anlegen und zurückgeben
+- [x] Mock-Store durch HTTP-Calls ersetzen (F1)
+- [x] Lade- und Fehlerzustände in den Views anzeigen (F1)
+- [ ] Suche, Filter, Sortierung, Pagination in der Liste (F2)
+- [ ] Formular-Validierung pro Feld (F4)
+- [ ] Ausleihen anlegen, zurückgeben, verlängern (F5, braucht Backend B3)
+- [ ] Responsive Layout und Barrierefreiheit (F6)

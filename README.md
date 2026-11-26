@@ -2,7 +2,7 @@
 
 Bücherei-Portal: ein kleiner Web-Stack mit **Flask** als Datenlieferant und **Vue 3** als Oberfläche.
 
-> **Aktueller Stand:** Projektgerüst (Scaffold). Die echte Datenbindung an eine Datenbank folgt in einem späteren Schritt. Bis dahin liefert das Backend Mock-Daten und das Frontend nutzt einen lokalen Mock-Store.
+> **Aktueller Stand:** Projektgerüst (Scaffold). Die echte Datenbindung an eine Datenbank folgt in einem späteren Schritt. Bis dahin liefert das Backend Mock-Daten; das Frontend holt sie über die Flask-API (`USE_MOCK = false`) und kann zum Arbeiten ohne Backend auf einen lokalen Mock-Store umschalten.
 
 ## Stack
 
@@ -30,7 +30,8 @@ frontend/
     main.js
     App.vue               Navigation und Layout
     router/index.js       Routen für Liste, Detail, Formular, Ausleihen
-    api/buecher.js        Mock-Store (später HTTP-Calls ans Backend)
+    api/client.js         fetch-Wrapper für /api mit Fehlermeldungen
+    api/buecher.js        Datenservice (async) mit Umschalter USE_MOCK
     components/           Wiederverwendbare UI-Bausteine
     views/                Seiten des Portals
 .github/
@@ -69,7 +70,9 @@ npm install
 npm run dev                 # http://localhost:5173
 ```
 
-Der Vite-Proxy leitet `/api`-Requests schon an `http://localhost:5000` weiter. Für die spätere Datenbindung muss der Mock-Store in `frontend/src/api/buecher.js` nur durch `fetch('/api/...')` ersetzt werden.
+Der Vite-Proxy leitet `/api`-Requests an `http://localhost:5000` weiter. Das Frontend braucht daher das laufende Backend; ohne Backend `USE_MOCK = true` in `frontend/src/api/buecher.js` setzen.
+
+> Hinweis Windows: Ist `python` nicht verfügbar, stattdessen `py` verwenden (`py -m venv .venv`, `py app.py`).
 
 ## Branchmodell
 
