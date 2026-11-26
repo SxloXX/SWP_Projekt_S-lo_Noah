@@ -21,16 +21,17 @@ Dieses Dokument übergibt den kompletten Projektstand an einen neuen Agenten. Bi
 
 ## 3. Branch- und Commit-Stand
 
-| Branch | Letzter Commit | Zweck |
+| Branch | Stand | Zweck |
 | --- | --- | --- |
-| `main` | `ea8c2e2` | Release-Stand, enthält Gerüst + Arbeitsteilung |
-| `develop` | `dc6ff97` | Integrationsbranch |
-| `feature/frontend-api-binding` | `64dac5f` | **Noahs aktueller Arbeitsbranch** – 3 neue Commits |
+| `main` | Release-Stand – aktuellen Hash mit `git log` prüfen | enthält Gerüst + Arbeitsteilung + Handoff |
+| `develop` | Integrationsbranch – aktuellen Hash mit `git log` prüfen | enthält alle gemergten Feature- und Docs-Branches |
+| `feature/frontend-api-binding` | `64dac5f` | **Noahs aktueller Arbeitsbranch** – 3 neue Commits, noch nicht gemergt |
 | `feature/backend-flask-api` | `5e9f6fe` | Sülos Flask-API (bereits nach develop gemergt) |
 | `feature/frontend-vue-portal` | `3c8869d` | Ursprüngliches Vue-Gerüst (bereits gemergt) |
 | `docs/arbeitsteilung` | `9b1946f` | Rollenverteilung (bereits gemergt) |
+| `docs/handoff` | – | Dieses Dokument (bereits nach develop und main gemergt) |
 
-Alle Branches sind gepusht. `feature/frontend-api-binding` ist **noch nicht** nach `develop` gemergt. Arbeitsverzeichnis zuletzt sauber.
+Alle Branches sind gepusht. `feature/frontend-api-binding` ist **noch nicht** nach `develop` gemergt und liegt deshalb mehrere Docs-Commits hinter `develop` – ein PR sollte konfliktfrei möglich sein. Arbeitsverzeichnis zuletzt sauber.
 
 ## 4. Was Noah in der letzten Runde gemacht hat (~1,3 h)
 
