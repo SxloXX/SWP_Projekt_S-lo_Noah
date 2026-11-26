@@ -68,30 +68,45 @@ function kopie(element) {
 
 function suchbegriffPasst(buch, suchbegriff) {
   if (!suchbegriff) return true
-  const begriff = suchbegriff.toLocaleLowerCase('de')
+  const begriff = suchbegriff.trim().toLocaleLowerCase('de')
   return (
     buch.titel.toLocaleLowerCase('de').includes(begriff) ||
     buch.autor.toLocaleLowerCase('de').includes(begriff)
   )
 }
 
+function filtereBuecher(buecher, params) {
+  return buecher
+    .filter((buch) => suchbegriffPasst(buch, params.suchbegriff))
+    .filter((buch) => !params.genre || buch.genre === params.genre)
+}
+
 // ---------------------------------------------------------------------------
-// Neue Schnittstelle: async, mit Mock-Fallback
+// Schnittstelle für die Views: async, mit Mock-Fallback
 // ---------------------------------------------------------------------------
 
 export async function ladeBuecher(params = {}) {
   if (USE_MOCK) {
-    return state.buecher
-      .filter((buch) => suchbegriffPasst(buch, params.suchbegriff))
-      .filter((buch) => !params.genre || buch.genre === params.genre)
-      .map(kopie)
+    return filtereBuecher(state.buecher, params).map(kopie)
   }
 
   const abfrage = new URLSearchParams()
   if (params.suchbegriff) abfrage.set('suchbegriff', params.suchbegriff)
   if (params.genre) abfrage.set('genre', params.genre)
   const query = abfrage.toString()
-  return request(`/buecher${query ? `?${query}` : ''}`)
+  const buecher = await request(`/buecher${query ? `?${query}` : ''}`)
+
+  // Das Backend wertet suchbegriff/genre noch nicht aus (kommt mit B4).
+  // Bis dahin filtern wir zusätzlich hier – auf bereits gefilterte Daten
+  // angewendet ändert das nichts, die Stelle kann danach entfallen.
+  return filtereBuecher(buecher, params)
+}
+
+/** Alle vorkommenden Genres, alphabetisch – für den Genre-Filter. */
+export async function ladeGenres() {
+  const buecher = await ladeBuecher()
+  const genres = new Set(buecher.map((buch) => buch.genre).filter(Boolean))
+  return [...genres].sort((a, b) => a.localeCompare(b, 'de'))
 }
 
 export async function ladeBuch(id) {
