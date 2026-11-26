@@ -19,6 +19,50 @@ const genre = computed(() => route.query.genre ?? '')
 const suchEingabe = ref(suchbegriff.value)
 const filterAktiv = computed(() => Boolean(suchbegriff.value || genre.value))
 
+// Sortierung ebenfalls in der URL (?sortierung=titel&richtung=ab).
+const SPALTEN = [
+  { feld: 'id', titel: 'ID' },
+  { feld: 'titel', titel: 'Titel' },
+  { feld: 'autor', titel: 'Autor:in' },
+  { feld: 'genre', titel: 'Genre' },
+  { feld: 'erscheinungsjahr', titel: 'Jahr' },
+]
+const sortierung = computed(() =>
+  SPALTEN.some((spalte) => spalte.feld === route.query.sortierung)
+    ? route.query.sortierung
+    : 'id',
+)
+const richtung = computed(() => (route.query.richtung === 'ab' ? 'ab' : 'auf'))
+
+const istLeer = (wert) => wert === null || wert === undefined || wert === ''
+
+function vergleiche(a, b, faktor) {
+  // Leere Werte landen unabhängig von der Richtung immer am Ende.
+  if (istLeer(a) || istLeer(b)) return istLeer(a) - istLeer(b)
+  if (typeof a === 'number' && typeof b === 'number') return (a - b) * faktor
+  return String(a).localeCompare(String(b), 'de', { numeric: true }) * faktor
+}
+
+const sortierteBuecher = computed(() => {
+  const faktor = richtung.value === 'ab' ? -1 : 1
+  const feld = sortierung.value
+  return [...buecher.value].sort((a, b) => vergleiche(a[feld], b[feld], faktor))
+})
+
+function sortiereNach(feld) {
+  const neueRichtung =
+    sortierung.value === feld && richtung.value === 'auf' ? 'ab' : 'auf'
+  setzeQuery({
+    sortierung: feld === 'id' && neueRichtung === 'auf' ? '' : feld,
+    richtung: neueRichtung === 'ab' ? 'ab' : '',
+  })
+}
+
+function ariaSort(feld) {
+  if (sortierung.value !== feld) return 'none'
+  return richtung.value === 'ab' ? 'descending' : 'ascending'
+}
+
 function setzeQuery(aenderungen) {
   const query = { ...route.query, ...aenderungen }
   for (const [schluessel, wert] of Object.entries(query)) {
@@ -136,17 +180,35 @@ onMounted(() => {
       <table v-if="!laden && !fehler && buecher.length">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Titel</th>
-            <th>Autor:in</th>
-            <th>Genre</th>
-            <th>Jahr</th>
+            <th
+              v-for="spalte in SPALTEN"
+              :key="spalte.feld"
+              :aria-sort="ariaSort(spalte.feld)"
+            >
+              <button
+                type="button"
+                class="sortierknopf"
+                :class="{ 'sortierknopf--aktiv': sortierung === spalte.feld }"
+                @click="sortiereNach(spalte.feld)"
+              >
+                {{ spalte.titel }}
+                <span aria-hidden="true">
+                  {{
+                    sortierung === spalte.feld
+                      ? richtung === 'ab'
+                        ? '↓'
+                        : '↑'
+                      : '↕'
+                  }}
+                </span>
+              </button>
+            </th>
             <th>Status</th>
             <th>Aktionen</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="buch in buecher" :key="buch.id">
+          <tr v-for="buch in sortierteBuecher" :key="buch.id">
             <td>{{ buch.id }}</td>
             <td>
               <RouterLink :to="`/buecher/${buch.id}`">{{ buch.titel }}</RouterLink>
