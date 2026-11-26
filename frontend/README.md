@@ -17,9 +17,13 @@ Danach: `http://localhost:5173`. Für echte Daten zusätzlich das Backend auf Po
 | --- | --- | --- |
 | `/buecher` | `BuecherListeView` | Tabelle aller Bücher, Aktionen: Details / Ändern / Löschen |
 | `/buecher/neu` | `BuchFormView` | Neues Buch anlegen |
-| `/buecher/:id` | `BuchDetailView` | Details und zugehörige Ausleihen (Liste) |
+| `/buecher/:id` | `BuchDetailView` | Details, Ändern/Löschen, Ausleihen-Historie mit Status (Aktiv / Überfällig / Zurückgegeben) |
 | `/buecher/:id/bearbeiten` | `BuchFormView` | Buch ändern |
 | `/ausleihen` | `AusleihenView` | Liste der Ausleihen |
+
+## Hilfsfunktionen
+
+`src/utils/ausleihe.js` – `ausleihStatus()` berechnet aus `rueckgabe_am` und `zurueckgegeben_am` den Status einer Ausleihe, `formatiereDatum()` zeigt ISO-Daten als `TT.MM.JJJJ`. Wird in der Detailansicht genutzt und ist für die Ausleihen-UI (F5) gedacht.
 
 ## Datenbindung
 
