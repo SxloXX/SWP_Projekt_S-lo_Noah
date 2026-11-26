@@ -27,15 +27,15 @@ Dieses Dokument übergibt den kompletten Projektstand an einen neuen Agenten ode
 | --- | --- | --- | --- | --- |
 | `main` | – | Release – Hash mit `git log` prüfen | Gerüst, Arbeitsteilung, Handoff | ja |
 | `develop` | – | Integration – Hash mit `git log` prüfen | alles Gemergte | ja |
-| `feature/frontend-api-binding` | `develop` | `4ae578e` | **F1 fertig** | nein (nur bis `64dac5f`) |
-| `feature/frontend-buch-liste` | F1 | `37c7df3` | **F2 fertig** | nein |
-| `feature/frontend-buch-detail` | F1 | `b50ed73` | **F3 fertig** | nein |
-| `docs/api-vertrag` | `develop` | `64dcfa8` | **API-Vertrag (Entwurf)** | nein |
-| `docs/handoff` | `develop` | dieses Dokument | Handoff + Fortschritt | nein |
+| `feature/frontend-api-binding` | `develop` | `4ae578e` | **F1 fertig** | ja |
+| `feature/frontend-buch-liste` | F1 | `37c7df3` | **F2 fertig** | ja |
+| `feature/frontend-buch-detail` | F1 | `b50ed73` | **F3 fertig** | ja |
+| `docs/api-vertrag` | `develop` | `64dcfa8` | **API-Vertrag (Entwurf)** | ja |
+| `docs/handoff` | `develop` | dieses Dokument | Handoff + Fortschritt | ja |
 
 - F2 und F3 bauen auf F1 auf. **Merge-Reihenfolge:** F1 → dann F2 und F3 (vorher auf `develop` rebasen). Vertrag und Handoff unabhängig.
 - Geprüft mit `git merge-tree`: F2+F3, `develop`+F3 und `develop`+Vertrag mergen konfliktfrei. F3 setzt seine CSS-Ergänzungen deshalb bewusst in die Mitte von `style.css`, F2 hängt ans Ende an.
-- Noah hat Push und PRs bewusst **noch zurückgestellt** – nicht ungefragt pushen.
+- Alle Branches sind gepusht (2026-11-26). **PRs nach `develop` sind noch zu öffnen** (GitHub-Weboberfläche, `gh` fehlt) – Reviewer: Sülo.
 
 ## 4. Was heute gemacht wurde
 
@@ -87,7 +87,7 @@ Alle Zustände stehen in der URL: `?suchbegriff=&genre=&sortierung=&richtung=ab&
 
 | Aufgabe | Abhängig von | ca. Aufwand |
 | --- | --- | --- |
-| F1, Vertrag pushen + PRs; danach F2, F3 | Noahs OK | 15 min |
+| PRs öffnen: F1, Vertrag, Handoff; danach F2, F3 (nach F1-Merge auf `develop` rebasen) | – | 10 min |
 | Sülo: Vertrag reviewen lassen, Zauberberg-Bug melden | – | 5 min |
 | **F4 Formulare:** Validierung pro Feld (ISBN, Jahr), Backend-`felder`-Fehler am Feld anzeigen | Vertrag (Fehlerformat) | 45–60 min |
 | **F5 Ausleihen-UI:** ausleihen, zurückgeben, verlängern | Sülos B3 | 3 h |
