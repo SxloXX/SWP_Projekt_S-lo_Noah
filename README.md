@@ -89,6 +89,6 @@ Details stehen in [CONTRIBUTING.md](CONTRIBUTING.md). Die konkrete Aufteilung au
 - [ ] Datenbankanbindung / echtes Data Binding (Backend + Frontend)
 - [ ] Ausleihen vollständig CRUD (Verlängerung, Rückgabe)
 - [ ] Validierung und saubere Fehlerresponses
-- [ ] Suche und Filter in der Listenansicht
+- [x] Suche und Filter in der Listenansicht (Frontend, F2) – Backend-Seite folgt mit B4
 - [ ] Tests (Backend und Frontend)
 - [ ] Authentifizierung für Mitarbeiter:innen

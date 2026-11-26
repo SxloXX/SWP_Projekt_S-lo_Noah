@@ -15,7 +15,7 @@ Danach: `http://localhost:5173`. Für echte Daten zusätzlich das Backend auf Po
 
 | Route | Ansicht | Inhalt |
 | --- | --- | --- |
-| `/buecher` | `BuecherListeView` | Tabelle aller Bücher, Aktionen: Details / Ändern / Löschen |
+| `/buecher` | `BuecherListeView` | Tabelle mit Suche, Genre-Filter, Sortierung und Pagination; Aktionen: Details / Ändern / Löschen |
 | `/buecher/neu` | `BuchFormView` | Neues Buch anlegen |
 | `/buecher/:id` | `BuchDetailView` | Details und zugehörige Ausleihen (Liste) |
 | `/buecher/:id/bearbeiten` | `BuchFormView` | Buch ändern |
@@ -42,7 +42,21 @@ Alle Views holen ihre Daten ausschließlich über die async-Funktionen in `src/a
 
 - [x] Mock-Store durch HTTP-Calls ersetzen (F1)
 - [x] Lade- und Fehlerzustände in den Views anzeigen (F1)
-- [ ] Suche, Filter, Sortierung, Pagination in der Liste (F2)
+- [x] Suche, Filter, Sortierung, Pagination in der Liste (F2) – vorerst im Frontend, bis Backend B4 die Listenantwort liefert
 - [ ] Formular-Validierung pro Feld (F4)
 - [ ] Ausleihen anlegen, zurückgeben, verlängern (F5, braucht Backend B3)
 - [ ] Responsive Layout und Barrierefreiheit (F6)
+
+## Listenansicht: URL-Parameter
+
+Der Zustand der Liste steht in der URL, damit Links und der Zurück-Button funktionieren:
+
+| Parameter | Werte | Standard |
+| --- | --- | --- |
+| `suchbegriff` | Text, sucht in Titel und Autor:in | – |
+| `genre` | exakter Genre-Name | alle |
+| `sortierung` | `id`, `titel`, `autor`, `genre`, `erscheinungsjahr` | `id` |
+| `richtung` | `ab` für absteigend | aufsteigend |
+| `seite` | Seitennummer ab 1, 10 Bücher pro Seite | `1` |
+
+Die Namen entsprechen `docs/API_VERTRAG.md`, Abschnitt 4. Sobald das Backend sie auswertet (B4), entfallen die Filter-Fallbacks in `src/api/buecher.js` und `BuecherListeView.vue`.
